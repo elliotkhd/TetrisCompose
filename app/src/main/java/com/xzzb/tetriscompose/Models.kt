@@ -1,85 +1,57 @@
 package com.xzzb.tetriscompose
 
 import kotlin.math.max
-import kotlin.math.min
 
 
 enum class ShapeType { Z, S, T, O, L, J, I }
 enum class BlockColor { Black, White, Red }
 
 
-class Shape(private val type: ShapeType, x: Int, y: Int, var rotateIndex: Int = 0) {
+class Shape(
+    private val type: ShapeType,
+    x: Int,
+    y: Int,
+    private var rotateIndex: Int = 0
+) {
     var blocks: List<BlockStatus> = getBlocksByCoordinates(type, x, y, rotateIndex)
-    var x = x
+    private var x = x
         set(value) {
             field = value
             blocks = getBlocksByCoordinates(type, value, y, rotateIndex)
         }
-    var y = y
+    private var y = y
         set(value) {
             field = value
             blocks = getBlocksByCoordinates(type, x, value, rotateIndex)
         }
 
-    fun top(): Int {
-        var result = 20
-        for (value in blocks) {
-            result = min(value.y, result)
-        }
-        return result
-    }
-
-    fun bottom(): Int {
-        var result = 0
-        for (value in blocks) {
-            result = max(value.y, result)
-        }
-        return result
-    }
-
-    fun left(): Int {
-        var result = 10
-        for (value in blocks) {
-            result = min(value.x, result)
-        }
-        return result
-    }
-
-    fun right(): Int {
-        var result = 0
-        for (value in blocks) {
-            result = max(value.x, result)
-        }
-        return result
-    }
-
     fun bottomOnX(x: Int): Int {
-        var result = 0;
+        var result = 0
         for (value in blocks) {
-            if (value.x == x) result = max(value.y, result);
+            if (value.x == x) result = max(value.y, result)
         }
-        return result;
+        return result
     }
 
     fun moveRight() {
         for (block in blocks) {
-            if (block.x + 1 >= 10) return;
+            if (block.x + 1 >= 10) return
         }
-        x += 1;
+        x += 1
     }
 
     fun moveLeft() {
         for (block in blocks) {
-            if (block.x - 1 < 0) return;
+            if (block.x - 1 < 0) return
         }
-        x -= 1;
+        x -= 1
     }
 
     fun moveDown() {
         for (block in blocks) {
-            if (block.y + 1 == 20) return;
+            if (block.y + 1 == 20) return
         }
-        y += 1;
+        y += 1
     }
 
     fun rotate() {
@@ -111,7 +83,7 @@ class Shape(private val type: ShapeType, x: Int, y: Int, var rotateIndex: Int = 
             return tmpList
         }
 
-        val offsetMap = mapOf(
+        private val offsetMap = mapOf(
             ShapeType.I to listOf(
                 listOf(-1, 0),
                 listOf(0, -1)
@@ -148,11 +120,11 @@ class Shape(private val type: ShapeType, x: Int, y: Int, var rotateIndex: Int = 
         )
 
 
-        val rotateMap = mapOf(
+        private val rotateMap = mapOf(
 
             ShapeType.I to listOf(
                 listOf(
-                    listOf(1, 1, 1)
+                    listOf(1, 1, 1, 1)
                 ),
                 listOf(
                     listOf(1),
@@ -257,4 +229,4 @@ class Shape(private val type: ShapeType, x: Int, y: Int, var rotateIndex: Int = 
     fun copy(type: ShapeType? = null, x: Int? = null, y: Int? = null, rotateIndex: Int? = null) = Shape(type ?: this.type, x ?: this.x, y ?: this.y, rotateIndex ?: this.rotateIndex)
 }
 
-class BlockStatus(var x: Int, var y: Int, var activated: Boolean = true)
+class BlockStatus(var x: Int, var y: Int)

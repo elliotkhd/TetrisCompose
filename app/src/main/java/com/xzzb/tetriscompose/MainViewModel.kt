@@ -12,10 +12,13 @@ val blockWidth = 13.dp
 
 class MainViewModel : ViewModel() {
     private val startLine = 19
-    private val speedLevels = listOf(1000L, 900L, 800L, 700L, 600L, 500L)
+    private val speedLevels = listOf(
+        1000L, 850,
+        700L, 550L,
+        400L, 250L
+    )
     private val timerDuration = 80L
     private val delayBeforeStarted = 200L
-    val autoTimerDuration = 300L
     var rightTimerStarted = false
     var leftTimerStarted = false
     var downTimerStarted = false
