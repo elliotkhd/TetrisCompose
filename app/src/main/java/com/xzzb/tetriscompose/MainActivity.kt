@@ -127,9 +127,9 @@ fun Tetris(viewModel: MainViewModel = androidx.lifecycle.viewmodel.compose.viewM
                             .border(BorderStroke(1.dp, Color.Black))
                             .padding(2.dp)
                     ) {
-                        viewModel.blocks.forEachIndexed { i, row ->
+                        viewModel.blocks.forEachIndexed { _, row ->
                             Row {
-                                row.forEachIndexed { j, block ->
+                                row.forEachIndexed { _, block ->
                                     Block(block)
                                 }
                             }
@@ -194,7 +194,11 @@ fun ControlArea(viewModel: MainViewModel) {
                     text = "音效",
                     color = Color(0xff2bbd1a),
                     onTapDown = { },
-                    onTapUp = { },
+                    onTapUp = {
+                        coroutineScope.launch {
+                            viewModel.turnAround()
+                        }
+                    },
                     onTap = {},
                     type = 3
                 )
@@ -229,24 +233,47 @@ fun ControlArea(viewModel: MainViewModel) {
         ) {
             ControlButton(Modifier.align(Alignment.TopCenter),
                 color = Color(0xff4749ee),
-                onTapDown = { /*TODO*/ },
-                onTapUp = { /*TODO*/ },
-                onTap = { /*TODO*/ })
-            ControlButton(Modifier.align(Alignment.CenterStart),
-                text = "左移", color = Color(0xff4749ee),
-                onTapDown = { /*TODO*/ },
-                onTapUp = { /*TODO*/ },
-                onTap = { /*TODO*/ })
-            ControlButton(Modifier.align(Alignment.CenterEnd),
-                text = "下移", color = Color(0xff4749ee),
-                onTapDown = { /*TODO*/ },
+                onTapDown = { viewModel.rotate() },
                 onTapUp = { /*TODO*/ },
                 onTap = { /*TODO*/ })
             ControlButton(Modifier.align(Alignment.BottomCenter),
-                text = "右移", color = Color(0xff4749ee),
-                onTapDown = { /*TODO*/ },
-                onTapUp = { /*TODO*/ },
+                text = "下移", color = Color(0xff4749ee),
+                onTapDown = {
+                    coroutineScope.launch {
+                        viewModel.moveDownForTimes()
+                    }
+                },
+                onTapUp = {
+                    viewModel.downTimerStarted = false
+                    viewModel.moveVertically = false
+                },
                 onTap = { /*TODO*/ })
+            ControlButton(Modifier.align(Alignment.CenterEnd),
+                text = "右移", color = Color(0xff4749ee),
+                onTapDown = {
+                    coroutineScope.launch {
+                        viewModel.moveRightForTimes()
+                    }
+                },
+                onTapUp = {
+                    viewModel.rightTimerStarted = false
+                    viewModel.moveHorizontally = false
+                },
+                onTap = { /*TODO*/ })
+            ControlButton(Modifier.align(Alignment.CenterStart),
+                text = "左移", color = Color(0xff4749ee),
+                onTapDown = {
+                    coroutineScope.launch {
+                        viewModel.moveLeftForTimes()
+                    }
+                },
+                onTapUp = {
+                    viewModel.leftTimerStarted = false
+                    viewModel.moveHorizontally = false
+                },
+                onTap = { /*TODO*/ })
+
+
             Text(
                 "旋转", Modifier.align(BiasAlignment(0.6f, -0.9f)),
                 style = TextStyle(fontSize = 12.sp)

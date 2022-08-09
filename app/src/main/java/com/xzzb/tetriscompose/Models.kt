@@ -8,7 +8,7 @@ enum class ShapeType { Z, S, T, O, L, J, I }
 enum class BlockColor { Black, White, Red }
 
 
-class Shape(val type: ShapeType, x: Int, y: Int, var rotateIndex: Int = 0) {
+class Shape(private val type: ShapeType, x: Int, y: Int, var rotateIndex: Int = 0) {
     var blocks: List<BlockStatus> = getBlocksByCoordinates(type, x, y, rotateIndex)
     var x = x
         set(value) {
@@ -80,6 +80,11 @@ class Shape(val type: ShapeType, x: Int, y: Int, var rotateIndex: Int = 0) {
             if (block.y + 1 == 20) return;
         }
         y += 1;
+    }
+
+    fun rotate() {
+        rotateIndex++
+        blocks = getBlocksByCoordinates(type, x, y, rotateIndex)
     }
 
     companion object {
@@ -248,6 +253,8 @@ class Shape(val type: ShapeType, x: Int, y: Int, var rotateIndex: Int = 0) {
         )
 
     }
+
+    fun copy(type: ShapeType? = null, x: Int? = null, y: Int? = null, rotateIndex: Int? = null) = Shape(type ?: this.type, x ?: this.x, y ?: this.y, rotateIndex ?: this.rotateIndex)
 }
 
 class BlockStatus(var x: Int, var y: Int, var activated: Boolean = true)

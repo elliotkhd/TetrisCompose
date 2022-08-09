@@ -7,28 +7,33 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.delay
 import java.util.*
 
+
 val blockWidth = 13.dp
 
 class MainViewModel : ViewModel() {
-    val startLine = 9
-    val speedLevels = listOf(1000L, 900L, 800L, 700L, 600L, 500L)
-    val timerDuration = 80L
-    val delayBeforeStarted = 200L
+    private val startLine = 19
+    private val speedLevels = listOf(1000L, 900L, 800L, 700L, 600L, 500L)
+    private val timerDuration = 80L
+    private val delayBeforeStarted = 200L
     val autoTimerDuration = 300L
     var rightTimerStarted = false
     var leftTimerStarted = false
     var downTimerStarted = false
-    val autoTimerDurationWhenManual = 500L
-    var speedLevel = 5
+    private val autoTimerDurationWhenManual = 500L
+    private var speedLevel = 5
     var paused = true
-    val shapeTypeStack = mutableListOf<MutableState<ShapeType>>()
-    lateinit var shape: Shape
-    lateinit var waitShape: Shape
-    var looping = false
+    private val shapeTypeStack = mutableListOf<MutableState<ShapeType>>()
+    private lateinit var shape: Shape
+    private lateinit var waitShape: Shape
+    private var looping = false
     var moveHorizontally = false
     var moveVertically = false
-    var movingLines = false
+    private var movingLines = false
     var nearBounce = false
+    private var _leftInProcess = false
+    private var _rightInProcess = false
+    private var _downInProcess = false
+
     val sampleShapes = listOf(
         listOf(
             0, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0
@@ -41,7 +46,7 @@ class MainViewModel : ViewModel() {
         )
     )
     val blocks = (0..19).map { i ->
-        (0..9).map { j ->
+        (0..9).map {
             mutableStateOf(
                 if (i > startLine)
                     if (Random().nextInt(10) < 7)
@@ -52,7 +57,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    val waitBlocks = (0..1).map { i ->
+    val waitBlocks = (0..1).map {
         (0..3).map {
             mutableStateOf(BlockColor.White)
         }
@@ -80,11 +85,11 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun initShapeOnTop() {
+    private fun initShapeOnTop() {
         val type = shapeTypeStack.first().value
         val y = if (type == ShapeType.I) 1 else 2
         shape = Shape(type, 4, -y)
-
+        initShapeOnWaiting()
     }
 
     fun initShapeOnWaiting() {
@@ -110,7 +115,7 @@ class MainViewModel : ViewModel() {
     }
 
 
-    suspend fun startAutoDrop() {
+    private suspend fun startAutoDrop() {
         looping = true
         while (true) {
             delay(
@@ -122,7 +127,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun hideShape() {
+    private fun hideShape() {
         for (value in shape.blocks) {
             if (value.y in 0..19 && value.x in 0..9) {
                 blocks[value.y][value.x].value = BlockColor.White
@@ -130,13 +135,13 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun cancelAllTimer() {
+    private fun cancelAllTimer() {
         downTimerStarted = false
         leftTimerStarted = false
         rightTimerStarted = false
     }
 
-    fun canMoveDown(): Boolean {
+    private fun canMoveDown(): Boolean {
         for (block in shape.blocks) {
             if (block.y + 1 == getFirstBlockBelowShapeInColumnX(block.x)) {
                 return false
@@ -154,7 +159,7 @@ class MainViewModel : ViewModel() {
         return 20
     }
 
-    fun drawShape() {
+    private fun drawShape() {
         val shapeBlocks = shape.blocks
         for (value in shapeBlocks) {
             if (value.y in 0..19 &&
@@ -165,7 +170,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun isLineCompleted(line: List<MutableState<BlockColor>>): Boolean {
+    private fun isLineCompleted(line: List<MutableState<BlockColor>>): Boolean {
         for (value in line) {
             if (value.value == BlockColor.White) {
                 return false
@@ -174,7 +179,7 @@ class MainViewModel : ViewModel() {
         return true
     }
 
-    suspend fun shineLines(lines: List<Int>) {
+    private suspend fun shineLines(lines: List<Int>) {
         paused = true
         for (value in lines) {
             for (value1 in blocks[value]) {
@@ -193,14 +198,14 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun moveLineDownward(y: Int, num: Int) {
+    private fun moveLineDownward(y: Int, num: Int) {
         val tmpLineY = listOf(*blocks[y].toTypedArray())
         for (i in 0..9) {
             blocks[y + num][i].value = tmpLineY[i].value
         }
     }
 
-    suspend fun removeCompletedLine() {
+    private suspend fun removeCompletedLine() {
         movingLines = true
         val completedLines = mutableListOf<Int>()
         for (i in 0..19) {
@@ -223,7 +228,7 @@ class MainViewModel : ViewModel() {
         movingLines = false
     }
 
-    suspend fun moveDown() {
+    private suspend fun moveDown() {
         hideShape()
         if (!canMoveDown()) {
             cancelAllTimer()
@@ -236,7 +241,7 @@ class MainViewModel : ViewModel() {
         drawShape()
     }
 
-    suspend fun shineShape() {
+    private suspend fun shineShape() {
         movingLines = true
         for (value in (shape.blocks)) {
             blocks[value.y][value.x].value = BlockColor.Red
@@ -264,5 +269,142 @@ class MainViewModel : ViewModel() {
         shineShape()
         removeCompletedLine()
         initShapeOnTop()
+    }
+
+    private fun moveRight() {
+        hideShape()
+        for (block in shape.blocks) {
+            if (block.x + 1 == getFirstActivatedBlockOnRight(block.x, block.y)) {
+                drawShape()
+                return
+            }
+        }
+        shape.moveRight()
+        drawShape()
+    }
+
+    private fun moveLeft() {
+        hideShape()
+        for (block in shape.blocks) {
+            if (block.x - 1 == getFirstActivatedBlockOnLeft(block.x, block.y)) {
+                drawShape()
+                return
+            }
+        }
+        shape.moveLeft()
+        drawShape()
+    }
+
+    fun rotate() {
+        hideShape()
+        val tmpShape = shape.copy()
+        tmpShape.rotate()
+        for (block in tmpShape.blocks) {
+            if (block.y >= 20 ||
+                block.x < 0 ||
+                block.x >= 10 ||
+                (block.y >= 0 &&
+                        blocks[block.y][block.x].value == BlockColor.Black)
+            ) {
+                drawShape()
+                return
+            }
+        }
+        shape.rotate()
+        drawShape()
+    }
+
+    private fun getFirstActivatedBlockOnRight(x: Int, y: Int): Int {
+        for (i in x..9) {
+            if (y >= 0 && blocks[y][i].value === BlockColor.Black) {
+                return i
+            }
+        }
+        return 10
+    }
+
+    private fun getFirstActivatedBlockOnLeft(x: Int, y: Int): Int {
+        for (i in x downTo 0) {
+            if (y >= 0 && blocks[y][i].value === BlockColor.Black) {
+                return i
+            }
+        }
+        return 10
+    }
+
+    suspend fun turnAround() {
+        for (i in 0..19) {
+            for (j in 0..9) {
+                blocks[i][j].value = BlockColor.White
+            }
+        }
+        delay(5L)
+        for (i in 0..19) {
+            for (j in 0..9) {
+                blocks[i][j].value = BlockColor.Black
+            }
+        }
+    }
+
+    suspend fun moveRightForTimes() {
+        if (movingLines) return
+        moveHorizontally = true
+        cancelAllTimer()
+        moveRight()
+        if (_rightInProcess) return
+        _rightInProcess = true
+        rightTimerStarted = true
+        delay(delayBeforeStarted)
+        _rightInProcess = true
+        if (!rightTimerStarted) {
+            _rightInProcess = false
+            return
+        }
+        while (rightTimerStarted) {
+            moveRight()
+            delay(timerDuration)
+            _rightInProcess = false
+        }
+    }
+
+    suspend fun moveLeftForTimes() {
+        if (movingLines) return
+        moveHorizontally = true
+        cancelAllTimer()
+        moveLeft()
+        if (_leftInProcess) return
+        _leftInProcess = true
+        leftTimerStarted = true
+        delay(delayBeforeStarted)
+        _rightInProcess = true
+        if (!leftTimerStarted) {
+            _leftInProcess = false
+            return
+        }
+        while (leftTimerStarted) {
+            moveLeft()
+            delay(timerDuration)
+            _leftInProcess = false
+        }
+    }
+
+    suspend fun moveDownForTimes() {
+        if (movingLines) return
+        moveVertically = true
+        cancelAllTimer()
+        moveDown()
+        if (_downInProcess) return
+        _downInProcess = true
+        downTimerStarted = true
+        delay(delayBeforeStarted)
+        if (!downTimerStarted) {
+            _downInProcess = false
+            return
+        }
+        while (downTimerStarted) {
+            moveDown()
+            delay(timerDuration)
+            _downInProcess = false
+        }
     }
 }
