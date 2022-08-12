@@ -4,10 +4,7 @@ import android.os.Bundle
 import android.view.MotionEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Surface
@@ -19,10 +16,12 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -273,10 +272,43 @@ fun ControlArea(viewModel: MainViewModel) {
                 },
                 onTap = { /*TODO*/ })
 
+            Triangle(Modifier.align(BiasAlignment(0f, 0.03f)).rotate(180f))
+
+            Triangle(Modifier.align(BiasAlignment(0.15f, -0.1f)).rotate(90f))
+
+            Triangle(Modifier.align(BiasAlignment(-0.15f, -0.1f)).rotate(-90f))
+
+            Triangle(Modifier.align(BiasAlignment(0f, -0.23f)))
 
             Text(
                 "旋转", Modifier.align(BiasAlignment(0.6f, -0.9f)),
                 style = TextStyle(fontSize = 12.sp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun Triangle(modifier: Modifier) {
+    Canvas(
+        modifier.size(12.dp)
+            .aspectRatio(1f)
+    ) {
+        val rect = Rect(Offset.Zero, size)
+        val trianglePath = Path().apply {
+            moveTo(rect.topCenter.x, rect.topCenter.y)
+            lineTo(rect.bottomRight.x, rect.bottomRight.y)
+            lineTo(rect.bottomLeft.x, rect.bottomLeft.y)
+            close()
+        }
+
+        drawIntoCanvas { canvas ->
+            canvas.drawOutline(
+                outline = Outline.Generic(trianglePath),
+                paint = Paint().apply {
+                    color = Color.Black
+                    pathEffect = PathEffect.cornerPathEffect(rect.maxDimension / 3)
+                }
             )
         }
     }

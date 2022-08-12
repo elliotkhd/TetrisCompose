@@ -226,7 +226,17 @@ class Shape(
 
     }
 
-    fun copy(type: ShapeType? = null, x: Int? = null, y: Int? = null, rotateIndex: Int? = null) = Shape(type ?: this.type, x ?: this.x, y ?: this.y, rotateIndex ?: this.rotateIndex)
+    fun copy(
+        type: ShapeType? = null,
+        x: Int? = null,
+        y: Int? = null,
+        rotateIndex: Int? = null
+    ) = Shape(
+        type ?: this.type,
+        x ?: this.x,
+        y ?: this.y,
+        rotateIndex ?: this.rotateIndex
+    )
 }
 
 class BlockStatus(var x: Int, var y: Int)
